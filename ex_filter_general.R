@@ -51,8 +51,8 @@ r_list<-unique(LR_pair$Gene_receptor)
 
 #matrix to obj normalisation------
 
-stage='adult'
-stagec='Adult'
+stage='p15'
+stagec='P15'
 ad_obj <- readRDS(paste0("FlyphoneDB/ozel_",stage,"/GSE142787_",stagec,".rds"))
 
 ad_obj <- UpdateSeuratObject(object = ad_obj)
@@ -104,17 +104,37 @@ f_known<-f_known %>% filter(!is.na(r_cluster))
 write.csv(f_known, file = (paste0("FlyphoneDB/ozel_",stage,"/wnt_fil_0.05_known.csv")),row.names = FALSE)
 
 
+#draw score change------
+
+df <- data.frame(matrix(ncol = 3, nrow = 0))
+
+
+for(i in c(1:5)){
+  for (j in c(1:5)){
+    sub_df<-express_filter(pct_list[i],sd_list[j])
+    
+    ad_df<-data.frame(matrix(ncol = 3, nrow = nrow(sub_df)))
+    colnames(ad_df)<-c('score','percentage','sc_expression')
+    ad_df$score <-sub_df$score
+    ad_df$percentage <- pct_list[i] %>% as.character()
+    ad_df$sc_expression <- sd_list[j] %>% as.character()
+    
+    df <- rbind(df, ad_df)
+  }
+}
+
+ggplot(data=df, aes(x=score)) +
+  #geom_histogram()+
+  geom_density(adjust=1.5,color="darkblue", fill="lightblue") +
+  facet_grid(vars(percentage), vars(sc_expression))+
+  ggtitle(stagec)+
+  theme_bw()
+
+
 #sum table-----
 pct_list<-c(10,20,40,60,80)
 sd_list<-c(0,0.5,1,1.5,2)
-
-
-
-df <- data.frame(matrix(ncol = 5, nrow = 5))
-
-colnames(df) <- sd_list
-rownames(df) <- pct_list
-
+df <- data.frame(matrix(ncol = 11, nrow = 0))
 for(i in c(1:5)){
   for (j in c(1:5)){
     df[i,j]<-express_filter(pct_list[i],sd_list[j])
