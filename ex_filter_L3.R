@@ -66,7 +66,7 @@ r_dot <- DotPlot(ad_obj,
                  idents = l_o)+ 
   theme(axis.text.x = element_text(angle = 90))$data
 r_dot<-r_dot$data
-r_dot[]<-lapply(r_dot,function(x)gsub('L3_','',x))
+r_dot[]<-lapply(r_dot,function(x)gsub('L3_','',x)) #remove 'L3' prefix
   
 r_dot$cluster<-lapply(r_dot$id, call_cluster_name)
 
@@ -78,7 +78,7 @@ l_dot <- DotPlot(ad_obj,
                  idents = l_o)+ 
   theme(axis.text.x = element_text(angle = 90))$data
 l_dot<-l_dot$data
-l_dot[]<-lapply(l_dot,function(x)gsub('L3_','',x))
+l_dot[]<-lapply(l_dot,function(x)gsub('L3_','',x)) #remove 'L3' prefix
 l_dot$cluster<-lapply(l_dot$id, call_cluster_name)
 
 

@@ -1,22 +1,19 @@
+# FlyphoneDB result process 
+# L3 stage specific due to difference cluster naming 
+# cluster 'L3_189' instead of cluster '189' 
+
+# The rest are the same as 'general_process.R'
+
 # library -------
 suppressPackageStartupMessages({
-  library(optparse)
   library(tidyverse)
-  library(future.apply)
   library(Seurat)
-  library(RColorBrewer)
   library(reshape2)
-  library(network)
-  library(igraph)
   library(dplyr)
 })
 
-#L3 specific call cluster------
 
-cl<-'L3_0>L3_0_score'
-cln<-gsub('L3_','',cl)
-cln
-str_split(cln,'_')[[1]][1]
+
 #functions----------
 call_l= function(x){
   return(str_split(x,'>')[[1]][1])
@@ -24,6 +21,9 @@ call_l= function(x){
 call_r= function(x){
   return(str_split(x,'>')[[1]][2])
 }
+
+dict_df<-read.csv("FlyphoneDB/parameters/Clusters-dict.csv")
+dict_df$Assignment <- gsub("*","",as.character(dict_df$Assignment),fixed = TRUE)
 
 call_cluster_name = function (x){
   name<-dict_df[which(dict_df$Cluster == x),2]
@@ -41,7 +41,7 @@ make_clean_df = function (df){
     
     fil_df<- df%>%
       filter(
-        .[[p]] <= 0.05
+        .[[p]] <= 0.05 ##DEFINE P-VALUE HERE!!!!!!!!! ----
       ) 
     
     if (nrow(fil_df)==0){
@@ -50,7 +50,7 @@ make_clean_df = function (df){
       fil_df<-fil_df[,c(1:3,s)]
       colnames(fil_df)[ncol(fil_df)]<-'score'
       cl<-colnames(df)[s]
-      cl<-gsub('L3_','',cl)
+      cl<-gsub('L3_','',cl) # removed 'L3_' prefix
       fil_df['pairing']<-str_split(cl,'_')[[1]][1]
       
       clean_df<-rbind(clean_df,fil_df)
@@ -73,8 +73,7 @@ celltype<-unique(meta$celltype)
 length(celltype)
 
 
-dict_df<-read.csv("FlyphoneDB/parameters/Clusters-dict.csv")
-dict_df$Assignment <- gsub("*","",as.character(dict_df$Assignment),fixed = TRUE)
+
 file<-list.files(path = paste0("FlyphoneDB/ozel_",stage,"/output_test_dataset"))
 length(file)
 

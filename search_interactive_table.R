@@ -1,4 +1,11 @@
+# Function to search and query in the flyphoneDB result table
+
+#Including analysis for glia and lamina
+
+# TAKE HOME -see 'MAIN FUNCTION'
+
 #Search big table----
+
 library(dplyr)
 library(tidyverse)
 
@@ -6,10 +13,10 @@ library(tidyverse)
 
 
 ##Import data-----
-
+#Insert your own file path here, no need to load all at the same time!!
 p15_1<-read.csv("FlyphoneDB/ozel_p15/lamina_p0.01.csv")
 
-p15_5<-read.csv("FlyphoneDB/ozel_p15/lamina_p0.05.csv")#Insert your file path here
+p15_5<-read.csv("FlyphoneDB/ozel_p15/lamina_p0.05.csv")
 p15_5<-p15_5[,2:8]
 ad_1<-read.csv("FlyphoneDB/ozel_adult/lamina_p0.01.csv")
 ad_1<-ad_1[,3:9]
@@ -41,6 +48,8 @@ call_l= function(x){
 call_r= function(x){
   return(str_split(x,'>')[[1]][2])
 }
+
+## MAIN FUNCTION HERE!!!!!!! -----
 
 search_int=function(og_df,l_gene,r_gene,l_c,r_c){ 
   
@@ -95,7 +104,7 @@ test_2<-unique(search_int(ad_5,"~","N",'L1',"~") )
 f_list<-c('Astrocyte','Epithelial','cartridge','Ensheathing','Cortex','Satellite','Chiasm',
           'Subperi','Chalice','Perineurial')
 
-#Adult (P<0.05)------
+#Adult (P<0.05) glia------
 
 ad_5$l_cluster<-lapply(ad_5$pairing,call_l)
 ad_5$l_cluster<-lapply(ad_5$l_cluster, call_cluster_name)

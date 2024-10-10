@@ -1,3 +1,11 @@
+#NON-essential
+
+# making graph and explore the flyphoneDB results:
+# ridge plot
+# violin plot
+# dot plot
+
+
 
 library(Seurat)
 library(ggplot2)

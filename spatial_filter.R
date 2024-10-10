@@ -1,3 +1,15 @@
+# SPATIAL FILTER FOR ADULT STAGE #
+# Based on Drosophila optic lobe cell types projections
+
+
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+
+
+# read in spatial parameter files
+
 spatial<-read.csv("FlyphoneDB/parameters/spatial_out.csv")
 spatial[is.na(spatial)] <- 0
 spatial<- data.frame(spatial[,-1], row.names = spatial[,1])
@@ -64,6 +76,10 @@ sum_list<-as.numeric(colSums(p_df))
 
 # Functions------
 
+# Function for overall overlapping for two cell types 
+# TO filter out non overlapping 
+
+## basic functions------
 overall_overlap<-function(cell_a,cell_b){
   
   if(cell_a%in% rownames(spatial)&cell_b%in% rownames(spatial)){
@@ -80,14 +96,10 @@ overall_overlap<-function(cell_a,cell_b){
   
 }
 
-overall_overlap('R1',NA)
 
 
 
-#filter out non overlapping 
-
-#continuous test
-
+#below is test and proof of concept, no need to run 
 brk<-c(1,1,1,0,0,0,1,1,0,0)
 con<-c(1,1,1,1,1,1,0,0,0,0)
 
@@ -98,15 +110,22 @@ length(b_list)==length(b_test)
 c_list<-which(con==0)
 c_test<-c(c_list[1]:c_list[length(c_list)])
 length(c_list)==length(c_test)
+# test end HERE
 
+
+# function testing whether there is any neurophil layer gap between the two cell types
 test_contin<- function (sm){
   c_list<-which(sm==0)
   c_test<-c(c_list[1]:c_list[length(c_list)])
   return(length(c_list)==length(c_test))
 }
 test_contin(sm[c(5:14)])
-##neuropil functions-----
 
+
+##neuropil functions-----
+# infer spatial relationship in EACH neurophil 
+
+# MEDULA
 me_proximity<-function(cell_a,cell_b){
   df<-spatial[c(cell_a,cell_b),]
   sm<-as.numeric(colSums(df))
@@ -129,6 +148,8 @@ me_proximity<-function(cell_a,cell_b){
   }
 }
 
+
+# LOBULA
 lo_proximity<-function(cell_a,cell_b){
   df<-spatial[c(cell_a,cell_b),]
   sm<-as.numeric(colSums(df))
@@ -151,6 +172,8 @@ lo_proximity<-function(cell_a,cell_b){
   }
 }
 
+
+# LOBULA PLATE
 lop_proximity<-function(cell_a,cell_b){
   df<-spatial[c(cell_a,cell_b),]
   sm<-as.numeric(colSums(df))
@@ -173,24 +196,13 @@ lop_proximity<-function(cell_a,cell_b){
   }
 }
 
-me_proximity('L4','Mt8')
 
 
-df<-spatial[c('Mt8','L1'),]
-sm<-as.numeric(colSums(df))
-if(1 %in% df[1,c(16:21)] ==FALSE | 1 %in% df[2,c(16:21)]==FALSE){
-  print('non_overlap')
-}else{
-  if(0 %in% sm[c(16:21)]==FALSE){
-    return('adjacent')
-  }else{
-    return(which(sm[c(16:21)]==0))
-  }
-}
+
 
 # try on------
 
-score<-read.csv('FlyphoneDB/ozel_adult/all_p0.01.csv') 
+score<-read.csv('FlyphoneDB/ozel_adult/all_p0.05.csv') 
 
 score$overlap<-mapply(overall_overlap,score$l_cluster,score$r_cluster)
 
@@ -207,60 +219,9 @@ for (i in c(1:nrow(score))){
   }
 }
 
-overlap<-score %>% filter(overlap=='overlap'|ME=='adjacent'|LO=='adjacent'|LOP=='adjacent') 
-write.csv(overlap,file = "FlyphoneDB/ozel_adult/p0.01_spatial_fil.csv",row.names = FALSE)
+overlap<-score %>% filter(overlap=='overlap'|ME=='adjacent'|LO=='adjacent'|LOP=='adjacent') # including overlaps or adjacent
+write.csv(overlap,file = "FlyphoneDB/ozel_adult/p0.05_spatial_fil.csv",row.names = FALSE)
 # ME=='adjacent'|LO=='adjacent'|LOP=='adjacent'
 
-#ligand_receptor pair frequency-----
-score$gene_pair<-paste(score$Gene_secreted,score$Gene_receptor,sep = '-')
-pair_frq <- score %>%
-  group_by(pathway_receptor, gene_pair) %>%
-  summarize(count=n())
 
 
-ggplot(pair_frq, aes(x="", y=count, fill=pathway_receptor)) +
-  geom_bar(stat="identity", width=1) +
-  coord_polar("y", start=0)
-
-
-pair_frq <- score %>%
-  group_by(pathway_receptor, gene_pair) %>%
-  summarize(count=n())
-
-
-#pathway frequency----
-p5<-read.csv('FlyphoneDB/ozel_p15/all_p0.05.csv') 
-
-path_frq <- p5 %>%
-  group_by(pathway_receptor, pairing) %>%
-  summarize(count=n())
-table(ad5$pathway_receptor)
-## functions------
-dict_df<-read.csv("FlyphoneDB/parameters/Clusters-dict.csv")
-
-call_cluster_name = function (x){
-  name<-dict_df[which(dict_df$Cluster == x),2]
-  return(name)
-}
-
-call_l= function(x){
-  return(str_split(x,'>')[[1]][1])
-}
-call_r= function(x){
-  return(str_split(x,'>')[[1]][2])
-}
-
-
-##rearrange------
-
-path_frq$l_cluster<-lapply(path_frq$pairing,call_l)
-path_frq$l_cluster<-lapply(path_frq$l_cluster, call_cluster_name)
-
-path_frq$r_cluster<-lapply(path_frq$pairing,call_r)
-path_frq$r_cluster<-lapply(path_frq$r_cluster, call_cluster_name)
-
-
-path_frq<-path_frq[,c(1,4,5,3)]
-
-path_frq$l_cluster <- sapply(path_frq$l_cluster, as.character)
-path_frq$r_cluster <- sapply(path_frq$r_cluster, as.character)

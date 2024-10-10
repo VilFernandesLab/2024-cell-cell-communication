@@ -55,18 +55,19 @@ plan(multisession, workers = as.numeric(opt$cores)) ## => parallelize on your lo
 ####################################
 
 
-exprMat <- read.csv("FlyphoneDB/ozel_p30/matrix.csv", row.names = 1, check.names = FALSE)
+exprMat <- read.csv(opt$matrix, row.names = 1, check.names = FALSE)
 
-cellInfo <- read.csv("FlyphoneDB/ozel_p30/meta.csv", row.names = 1)
+cellInfo <- read.csv(opt$metadata, row.names = 1)
 cellInfo$celltype <- as.character(cellInfo$celltype)
 
 
-exprMat <- exprMat[, row.names(cellInfo)]
+exprMat <- exprMat[ , row.names(cellInfo)]
 
 exprMat <- sweep(exprMat, 2, Matrix::colSums(exprMat), FUN = "/") * 10000
 
 
-LR_pairs <- read.csv(file = "FlyphoneDB/ligand_receptor_pair_new.csv", sep = ",")
+LR_pairs <- read.csv(file = opt$lrpair, sep = ",")
+
 
 gene_list <- unique(c(LR_pairs$Gene_secreted, LR_pairs$Gene_receptor))
 common_genes <- intersect(gene_list, row.names(exprMat))
